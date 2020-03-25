@@ -108,7 +108,7 @@ def mask_bipartite_perturbation_test_edges(adj):
             setA.add((x,y))
         for index in range(b.shape[0]):
             setB.add((b[index,0],b[index,1]))
-        return len(setA.intersection(setB)) != 0
+        return len(setA.intersection(setB)) > 0
 
     if args.use_saved_edge_false:
         with open(str(args.dataset) +'_test_edges_false.pkl', 'rb') as f:
@@ -137,7 +137,8 @@ def mask_bipartite_perturbation_test_edges(adj):
     val_edges_false = []
 
     ''' only for large datasets '''
-    if args.dataset == 'movie1m' or args.dataset == 'movie100k' or args.dataset == 'pubmed' or args.dataset == 'nanet':
+    if args.dataset == 'movie1m' or args.dataset == 'movie100k' or args.dataset == 'pubmed' or args.dataset == 'nanet'\
+        or args.dataset =='gpcr':
 
         top_right_adj = adj[:len(u2id),len(u2id):].toarray()
         indexes = np.where(top_right_adj==0.0)
@@ -175,16 +176,25 @@ def mask_bipartite_perturbation_test_edges(adj):
         train_false_edges = np.delete(false_edges, val_edges_false + test_edges_false, axis=0)
         train_false_edges = train_false_edges[:len(train_edges)]
 
-        assert isSetMember(test_edges_false, edges)
+        assert ~isSetMember(test_edges_false, edges)
         print('~isSetMember(test_edges_false, edges) is True')
-        assert isSetMember(val_edges_false, edges)
+        assert ~isSetMember(val_edges_false, edges)
         print('isSetMember(val_edges_false, edges) is True')
-        assert isSetMember(val_edges, train_edges)
+        assert ~isSetMember(val_edges, train_edges)
         print('isSetMember(val_edges, train_edges) is True')
-        assert isSetMember(test_edges, train_edges)
+        assert ~isSetMember(test_edges, train_edges)
         print('isSetMember(test_edges, train_edges) is True')
-        assert isSetMember(val_edges, test_edges)
+        assert ~isSetMember(val_edges, test_edges)
         print('isSetMember(val_edges, test_edges) is True')
+
+        print('len(train_edges): ',len(train_edges))
+        print('len(val_edges): ',len(val_edges))
+        print('len(test_edges): ',len(test_edges))
+        print('len(edges): ', len(edges))
+        print('len(val_edges_false):', len(val_edges_false))
+        print('len(test_edges_false):', len(test_edges_false))
+        print('len(false_edges):', len(false_edges))
+        print('len(edges_all):', len(edges_all))
         # print('train false edges!')
         return adj_train, train_edges, val_edges, val_edges_false, test_edges, test_edges_false, edges_all, false_edges
 

@@ -35,13 +35,20 @@ def load_data_biological(dataset, change_seed=False):
     v_list = []
     for line in f:
          # malaria case
-        if len(line.strip('\n').split('\t')) == 4:
+        if dataset == 'malaria':
             edge = line.strip('\n').split('\t')
             edge1 = edge[1]
             edge2 = edge[2]
             u_list.append(edge1)
             v_list.append(edge2)
             continue 
+        elif dataset == 'movie100k':
+            edge = line.strip('\n').split('\t')
+            edge1 = edge[0]
+            edge2 = edge[1]
+            u_list.append(edge1)
+            v_list.append(edge2)
+            continue
         elif len(line.strip('\n').split('\t')) > 1:
             edge = line.strip('\n').split('\t')
         elif len(line.strip('\n').split(' '))> 1:
@@ -89,13 +96,19 @@ def load_data_biological(dataset, change_seed=False):
     edge_list = []
     for line in f:
         # malaria case
-        if len(line.strip('\n').split('\t')) == 4:
+        if dataset == 'malaria':
             edge = line.strip('\n').split('\t')
             edge1 = u2id[edge[1]]
             edge2 = v2id[edge[2]]
             edge_list.append((edge1,edge2))
             graph[edge1].append(edge2)
             continue 
+        elif dataset == 'movie100k':
+            edge = line.strip('\n').split('\t')
+            if int(edge[2]) < 3.0:
+                graph[u2id[edge[0]]]
+                graph[v2id[edge[1]]]
+                continue
         elif len(line.strip('\n').split('\t')) > 1:
             edge = line.strip('\n').split('\t')
         elif len(line.strip('\n').split(' '))> 1:
