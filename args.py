@@ -1,8 +1,8 @@
 ### CONFIGS ###
 # dataset = 'ionchannel'
 # dataset='enzyme'
-# dataset = 'gpcr'
-dataset= 'malaria'
+dataset = 'gpcr'
+# dataset= 'malaria'
 # dataset = 'nanet'
 # dataset = 'c2o'
 
@@ -22,9 +22,9 @@ model1 = 'LGAE' # GAE, LGAE
 model2 = 'LGAE' # MGAE, MLGAE, LGAE, GAE
 # model2 = 'HLGAE'
 
-# input_dim1 = 318 # gpcr bipartite
+input_dim1 = 318 # gpcr bipartite
 # input_dim1 = 1109 # enzyme bipartite
-input_dim1 = 1103 # malaria
+# input_dim1 = 1103 # malaria
 # input_dim1 =1880 # nanet
 # input_dim1 = 261 # country2org
 
@@ -56,9 +56,6 @@ numexp = 10
 weight_seed = 100
 edge_idx_seed = 100
 
-# input_dim = 500 # pubmed feature
-# input_dim = 3703 + 3327# citeseer + feature
-# input_dim = 1433 # cora+feature
 
 # input_dim1 = 1123 # citeseer bipartite
 # input_dim1 = 1611 #/ cora bipartite
@@ -66,10 +63,3 @@ edge_idx_seed = 100
 
 # input_dim = 3327 # citeseer featureless
 # input_dim =2708 # cora featureless 
-
-
-# dataset = 'cora'
-# dataset = 'pubmed'
-# dataset = 'citeseer'
-# dataset = 'fdneg'
-# dataset = 'fdpos'

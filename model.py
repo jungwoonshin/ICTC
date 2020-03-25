@@ -37,13 +37,6 @@ class GraphConvSparse(nn.Module):
 
 	def forward(self, inputs):
 		x = inputs
-		# print(type(self.adj))
-		# print(type(x))
-		''' AB multiplication first '''
-		# x = torch.mm(self.adj.to_dense(), x)
-		# x = torch.mm(x,self.weight)
-
-		''' BC multiplication first '''
 		x = torch.mm(x,self.weight)
 		x = torch.mm(self.adj, x)
 		outputs = self.activation(x)
@@ -76,10 +69,6 @@ class GAE(nn.Module):
 		return z
 
 	def forward(self, X):
-		# X = torch.cat((X, adj), 1)
-		# X = torch.mm(X, self.resizing_weight)
-		# print(feature_adj.shape)
-		# exit()
 		Z = self.encode(X)
 		A_pred = dot_product_decode(Z)
 		return A_pred
@@ -87,12 +76,10 @@ class GAE(nn.Module):
 class LGAE(nn.Module):
 	def __init__(self, adj, unnormalized_adj):
 		super(LGAE,self).__init__()
-		# adj real-time update
-		self.first_layer =  TwohopGraphConvSparse(args.input_dim1, args.hidden1_dim, adj, activation=lambda x:x)
-		# self.gcn_mean = GraphConvSparse(args.hidden1_dim, args.hidden2_dim, adj, activation=lambda x:x)
+		self.gcn_mean = GraphConvSparse(args.input_dim1, args.hidden1_dim, adj, activation=lambda x:x)
 
 	def encode(self, X):
-		z = self.first_layer(X)
+		z = self.gcn_mean(X)
 		return z
 
 	def forward(self, X):
