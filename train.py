@@ -110,9 +110,9 @@ def run():
         adj, features,\
             adj_train, train_edges, val_edges, val_edges_false, test_edges, test_edges_false, edges_all, edges_false_all = get_data(args.dataset)
 
-        with open(str(args.dataset) +'u2id.pkl', 'rb') as f:
+        with open('data/bipartite/id2name/'+ str(args.dataset) +'u2id.pkl', 'rb') as f:
             u2id = pickle.load(f)
-        with open(str(args.dataset) +'v2id.pkl', 'rb') as f:
+        with open('data/bipartite/id2name/'+ str(args.dataset) +'v2id.pkl', 'rb') as f:
             v2id = pickle.load(f)
 
         adj_orig = adj  

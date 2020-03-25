@@ -28,172 +28,6 @@ def parse_index_file(filename):
         index.append(int(line.strip()))
     return index
 
-def load_data_fd_neg(dataset):
-    with open("data/fd_neg/id2disease.pickle", 'rb') as f:
-        id2disease = pkl.load(f)
-    with open("data/fd_neg/id2ingredient.pickle", 'rb') as f:
-        id2ingredient = pkl.load(f)
-
-    total_number_nodes = len(id2disease) + len(id2ingredient)
-    print('total_number_nodes:',total_number_nodes)
-
-    row = np.array([x for x in range(total_number_nodes)])
-    col = np.array([x for x in range(total_number_nodes)])
-    data = np.array([1 for x in range(total_number_nodes)])
-    whole_x = csr_matrix((data, (row, col)), shape=(total_number_nodes, total_number_nodes))
-    # print('x:',x)
-    idx = int(whole_x.shape[0]*0.9)
-
-    x = whole_x[:idx,:]
-    tx = whole_x[idx:,:]
-    allx = x
-
-    f = open("data/fd_neg/edgelist_neg", 'r')
-    graph = defaultdict(list)
-    for line in f:
-        edge = line.strip('\n').split(' ')
-        graph[int(edge[0])].append(int(edge[1]))
-    # print(graph)
-
-    features = sp.vstack((allx, tx)).tolil()
-    adj = nx.adjacency_matrix(nx.from_dict_of_lists(graph))
-
-    # row = np.array([x for x in range(total_number_nodes)])
-    # col = np.array([x for x in range(total_number_nodes)])
-    # data = np.random.uniform(low=-1, high=1, size=(total_number_nodes,))
-    # features = csr_matrix((data, (row, col)), shape=(total_number_nodes, total_number_nodes))
-
-    print(adj.shape)
-    print(features.shape)
-
-    return adj, features
-def load_data_fd(dataset):
-    with open("data/fd/id2disease.pickle", 'rb') as f:
-        id2disease = pkl.load(f)
-    with open("data/fd/id2ingredient.pickle", 'rb') as f:
-        id2ingredient = pkl.load(f)
-
-    total_number_nodes = len(id2disease) + len(id2ingredient)
-    print('total_number_nodes:',total_number_nodes)
-
-    row = np.array([x for x in range(total_number_nodes)])
-    col = np.array([x for x in range(total_number_nodes)])
-    data = np.array([1 for x in range(total_number_nodes)])
-    whole_x = csr_matrix((data, (row, col)), shape=(total_number_nodes, total_number_nodes))
-    # print('x:',x)
-    idx = int(whole_x.shape[0]*0.9)
-
-    x = whole_x[:idx,:]
-    tx = whole_x[idx:,:]
-    allx = x
-
-    f = open("data/fd/edgelist", 'r')
-    graph = defaultdict(list)
-    for line in f:
-        edge = line.strip('\n').split(' ')
-        graph[int(edge[0])].append(int(edge[1]))
-    # print(graph)
-
-    features = sp.vstack((allx, tx)).tolil()
-    adj = nx.adjacency_matrix(nx.from_dict_of_lists(graph))
-    # print(type(adj))
-    # print((adj!=adj.T).nnz==0)
-
-    # row = np.array([x for x in range(total_number_nodes)])
-    # col = np.array([x for x in range(total_number_nodes)])
-    # data = np.random.uniform(low=-1, high=1, size=(total_number_nodes,))
-    # features = csr_matrix((data, (row, col)), shape=(total_number_nodes, total_number_nodes))
-
-    print(adj.shape)
-    print(features.shape)
-
-    return adj, features
-
-def load_data(dataset):
-    # load the data: x, tx, allx, graph
-    names = ['x', 'tx', 'allx', 'graph']
-    objects = []
-    for i in range(len(names)):
-        with open("data/ind.{}.{}".format(dataset, names[i]), 'rb') as f:
-            if sys.version_info > (3, 0):
-                objects.append(pkl.load(f, encoding='latin1'))
-            else:
-                objects.append(pkl.load(f))
-    x, tx, allx, graph = tuple(objects)
-    test_idx_reorder = parse_index_file("data/ind.{}.test.index".format(dataset))
-    test_idx_range = np.sort(test_idx_reorder)
-    # print('x:',x.shape)
-    # print('tx:',tx.shape)
-    # print('allx:',allx)
-    # print('graph:',graph)
-
-    if dataset == 'citeseer':
-        # Fix citeseer dataset (there are some isolated nodes in the graph)
-        # Find isolated nodes, add them as zero-vecs into the right position
-        test_idx_range_full = range(min(test_idx_reorder), max(test_idx_reorder)+1)
-        tx_extended = sp.lil_matrix((len(test_idx_range_full), x.shape[1]))
-        tx_extended[test_idx_range-min(test_idx_range), :] = tx
-        tx = tx_extended
-
-    adj = nx.adjacency_matrix(nx.from_dict_of_lists(graph))
-
-    # total_number_nodes = len(graph.keys())
-    # print(total_number_nodes)
-    # row = np.array([x for x in range(total_number_nodes)])
-    # col = np.array([x for x in range(total_number_nodes)])
-    # data = np.array([1 for x in range(total_number_nodes)])
-    # features = csr_matrix((data, (row, col)), shape=(total_number_nodes, total_number_nodes)).tolil()
-    features = sp.vstack((allx, tx)).tolil()
-    features[test_idx_reorder, :] = features[test_idx_range, :]
-    print(adj.shape)
-    print(features.shape)
-    # exit()
-    return adj, features
-
-def load_data_featureless(dataset):
-    # load the data: x, tx, allx, graph
-    names = ['x', 'tx', 'allx', 'graph']
-    objects = []
-    for i in range(len(names)):
-        with open("data/ind.{}.{}".format(dataset, names[i]), 'rb') as f:
-            if sys.version_info > (3, 0):
-                objects.append(pkl.load(f, encoding='latin1'))
-            else:
-                objects.append(pkl.load(f))
-    x, tx, allx, graph = tuple(objects)
-    test_idx_reorder = parse_index_file("data/ind.{}.test.index".format(dataset))
-    test_idx_range = np.sort(test_idx_reorder)
-    # print('x:',x.shape)
-    # print('tx:',tx.shape)
-    # print('allx:',allx)
-    # print('graph:',graph)
-
-    if dataset == 'citeseer':
-        # Fix citeseer dataset (there are some isolated nodes in the graph)
-        # Find isolated nodes, add them as zero-vecs into the right position
-        test_idx_range_full = range(min(test_idx_reorder), max(test_idx_reorder)+1)
-        tx_extended = sp.lil_matrix((len(test_idx_range_full), x.shape[1]))
-        tx_extended[test_idx_range-min(test_idx_range), :] = tx
-        tx = tx_extended
-
-    adj = nx.adjacency_matrix(nx.from_dict_of_lists(graph))
-
-    total_number_nodes = adj.shape[0]
-    print(total_number_nodes)
-    row = np.array([x for x in range(total_number_nodes)])
-    col = np.array([x for x in range(total_number_nodes)])
-    data = np.array([1 for x in range(total_number_nodes)])
-    features = csr_matrix((data, (row, col)), shape=(total_number_nodes, total_number_nodes)).tolil()
-    # features = sp.vstack((allx, tx)).tolil()
-    features[test_idx_reorder, :] = features[test_idx_range, :]
-    print(adj.shape)
-    print(features.shape)
-    # exit()
-    return adj, features
-
-
-
-
 def load_data_biological(dataset, change_seed=False):
     
     f = open("data/bipartite/edgelist_"+dataset+"_bp", 'r')
@@ -240,13 +74,13 @@ def load_data_biological(dataset, change_seed=False):
         id2v[index] = val
         v2id[val] = index
 
-    with open(str(args.dataset) +'id2v.pkl', 'wb') as f:
+    with open('data/bipartite/id2name/'+ str(args.dataset) +'id2v.pkl', 'wb') as f:
         pickle.dump(id2v, f)
-    with open(str(args.dataset) +'id2u.pkl', 'wb') as f:
+    with open('data/bipartite/id2name/'+ str(args.dataset) +'id2u.pkl', 'wb') as f:
         pickle.dump(id2u, f)
-    with open(str(args.dataset) +'u2id.pkl', 'wb') as f:
+    with open('data/bipartite/id2name/'+ str(args.dataset) +'u2id.pkl', 'wb') as f:
         pickle.dump(u2id, f)
-    with open(str(args.dataset) +'v2id.pkl', 'wb') as f:
+    with open('data/bipartite/id2name/'+ str(args.dataset) +'v2id.pkl', 'wb') as f:
         pickle.dump(v2id, f)
 
     f = open("data/bipartite/edgelist_"+dataset+"_bp", 'r')
