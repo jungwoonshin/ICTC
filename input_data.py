@@ -106,6 +106,8 @@ def load_data_biological(dataset, change_seed=False):
         elif dataset == 'movie100k':
             edge = line.strip('\n').split('\t')
             if int(edge[2]) < 3.0:
+                graph[u2id[edge[0]]]
+                graph[v2id[edge[1]]]
                 continue
         elif len(line.strip('\n').split('\t')) > 1:
             edge = line.strip('\n').split('\t')
@@ -313,11 +315,11 @@ def load_data_drug(dataset, change_seed=False):
         u_name = line.strip('\n').split('\t')[0]
         u_name_list.append(u_name)
 
-    with open(str(args.dataset) +'u2id.pkl', 'wb') as f:
+    with open('data/bipartite/id2name/'+ str(args.dataset)+'u2id.pkl', 'wb') as f:
         pickle.dump(u_name_list, f)
 
     v_name_list = range(adj.shape[0]-len(u_name_list))
-    with open(str(args.dataset) +'v2id.pkl', 'wb') as f:
+    with open('data/bipartite/id2name/'+ str(args.dataset) +'v2id.pkl', 'wb') as f:
         pickle.dump(v_name_list, f)
     # check if 0 is value is set on top-right and bottom-left side of adjacency matrix.
     # warning=0
