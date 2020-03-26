@@ -60,7 +60,7 @@ class GAE(nn.Module):
 	def __init__(self, adj, unnormalized_adj):
 		super(GAE,self).__init__()
 		# adj real-time update
-		self.base_gcn = GraphConvSparse(args.input_dim, args.hidden1_dim, adj)
+		self.base_gcn = GraphConvSparse(args.input_dim1, args.hidden1_dim, adj)
 		self.gcn_mean = GraphConvSparse(args.hidden1_dim, args.hidden2_dim, adj, activation=lambda x:x)
 
 	def encode(self, X):

@@ -4,6 +4,7 @@ from sklearn.metrics import roc_auc_score, average_precision_score, precision_re
 import scipy.stats
 from scipy import sparse
 import networkx as nx
+from scipy.stats import pearsonr
 
 from input_data import *
 from preprocessing import *
@@ -74,6 +75,28 @@ def get_scores(edges_pos, edges_neg, adj_rec, adj_orig):
     preds = []
     pos = []
     for e in edges_pos:
+        preds.append(sigmoid(adj_rec[e[0], e[1]].item()))
+        pos.append(adj_orig[e[0], e[1]])
+
+    preds_neg = []
+    neg = []
+    for e in edges_neg:
+        preds_neg.append(sigmoid(adj_rec[e[0], e[1]].item()))
+        neg.append(adj_orig[e[0], e[1]])
+
+    preds_all = np.hstack([preds, preds_neg])
+    labels_all = np.hstack([np.ones(len(preds)), np.zeros(len(preds_neg))])
+    roc_score = roc_auc_score(labels_all, preds_all)
+    ap_score = average_precision_score(labels_all, preds_all)
+    return roc_score, ap_score
+
+def get_correlation(edges_pos, edges_neg, adj_rec, adj_orig):
+
+
+    # Predict on test set of edges
+    preds = []
+    pos = []
+    for e in edges_pos:
         # print(e)
         # print(adj_rec[e[0], e[1]])
         # score = sigmoid(adj_rec[e[0], e[1]].item())
@@ -95,19 +118,48 @@ def get_scores(edges_pos, edges_neg, adj_rec, adj_orig):
     roc_score = roc_auc_score(labels_all, preds_all)
     ap_score = average_precision_score(labels_all, preds_all)
 
-    # if epoch > 100:
-    #     print("ANSWERS")
-    #     print(labels_all)
-    #     print("PREDICTIONS")
-    #     print(preds_all)
+    corr, _ = pearsonr(preds_all, labels_all)
+    print('correlation:' ,corr)
 
-    return roc_score, ap_score
+    return corr
+
+def get_precision(edges_pos, edges_neg, adj_rec, adj_orig,train_edges, u2id,v2id):
+    train_edges_list = []
+    for i in train_edges:
+        train_edges_list.append((i[0],i[1]))
+
+    all_edges = []
+    for i in range(len(u2id)):
+        for j in range(len(u2id),len(u2id)+len(v2id)):
+            all_edges.append((i,j))
+
+    equal_edges =  [(x,x) for x in range(adj_rec.shape[0])]
+    u_minus_ep = list(set(all_edges) - set(equal_edges))
+    u_minus_ep = list(set(u_minus_ep) - set(train_edges_list))
+
+    index_value_list = []
+    for i in u_minus_ep:
+        x = i[0]
+        y = i[1]
+        element = (x,y, adj_rec[x,y].item())
+        index_value_list.append(element)
+
+    index_value_list = sorted(index_value_list, key=lambda tup: tup[2], reverse=True)
+    index_value_list = index_value_list[:len(edges_pos)]
+    correct = 0.
+    for (x,y,z) in index_value_list:
+        if (x,y) in edges_pos:
+            correct+=1.
+    precision = correct / len(edges_pos)
+    # print(precision)
+    return precision
 
 def get_acc(adj_rec, adj_label):
     labels_all = adj_label.to_dense().view(-1).long()
     preds_all = (adj_rec > 0.5).view(-1).long()
     accuracy = (preds_all == labels_all).sum().float() / labels_all.size(0)
     return accuracy
+
 def get_acc2(adj_rec, adj_label):
     labels_all = adj_label.view(-1).long()
     preds_all = (adj_rec > 0.5).view(-1).long()
@@ -185,6 +237,7 @@ def get_similarity_and_number_of_neighbors(adj_train,  adj_train_norm, u2id):
     mean_ncn = np.mean(number_of_common_neighbor)
     print(mean_ncn)
 
+# get homogeneous scores for same set nodes only.
 def get_homo_scores(adj_train, u2id, v2id):
     graph =nx.from_numpy_matrix(adj_train.toarray())
     size = adj_train.shape[0]

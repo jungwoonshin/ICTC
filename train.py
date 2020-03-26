@@ -27,7 +27,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def learn_train_adj(seed):
     global adj_train, adj, features, adj_norm, adj_label, weight_mask, weight_tensor, pos_weight, norm, num_feature, features_nonzero, num_nodes
-    global train_edges, train_false_edges, val_edges, val_edges_false, test_edges, test_edges_false
+    global train_edges, train_false_edges, val_edges, val_edges_false, test_edges, test_edges_false, false_edges
     global u2id, v2id
     global adj_orig, adj_unnormalized, adj_norm_first
     # train model
@@ -72,21 +72,23 @@ def learn_train_adj(seed):
                   "val_ap=", "{:.5f}".format(val_ap),
                   "time=", "{:.5f}".format(time.time() - t))
 
+    test_precision = get_precision(test_edges, test_edges_false, A_pred, adj_orig, sparse_to_tuple(sparse.csr_matrix(train_edges))[0], u2id,v2id)
     test_roc, test_ap = get_scores(test_edges, test_edges_false, A_pred, adj_orig)
-    print("End of training!", "test_pretrain_roc=", "{:.5f}".format(test_roc),
-          "test_pretrain_ap=", "{:.5f}".format(test_ap))
+    print("2nd model End of training!", "test_roc=", "{:.5f}".format(test_roc),
+              "test_ap=", "{:.5f}".format(test_ap), 
+              'test precision=','{:.5f}'.format(test_precision))
 
     learn_train_adj = A_pred.cpu().detach().numpy()
     learn_train_adj = sp.csr_matrix(learn_train_adj)
     # sp.save_npz('data/'+str(args.model1) +'_' +str(args.dataset)+'_reconstructed_matrix.npz', learn_train_adj)
     # print('feature matrix saved!')
     # exit()
-    return learn_train_adj, test_roc, test_ap
+    return learn_train_adj, test_roc, test_ap, test_precision
 
 def run():
 
     global adj_train, adj, features, adj_norm, adj_label, weight_mask, weight_tensor, pos_weight, norm, num_feature, features_nonzero, num_nodes
-    global train_edges, train_false_edges, val_edges, val_edges_false, test_edges, test_edges_false, edges_all, adj_all
+    global train_edges, train_false_edges, val_edges, val_edges_false, test_edges, test_edges_false, edges_all, adj_all, false_edges
     global u2id, v2id, adj_unnormalized
     global adj_orig, adj_norm_first
 
@@ -102,13 +104,19 @@ def run():
     # train model
     test_ap_list = []
     test_roc_list = []
-    
+    test_precision_list = []
+    test_auc_list = []
+
+
     test_ap_pretrain_list = []
     test_roc_pretrain_list = []
+    test_precision_pretrain_list = []
+    test_auc_pretrain_list = []
+
 
     for seed in range(args.numexp):
         adj, features,\
-            adj_train, train_edges, val_edges, val_edges_false, test_edges, test_edges_false, edges_all, edges_false_all = get_data(args.dataset)
+            adj_train, train_edges, val_edges, val_edges_false, test_edges, test_edges_false, edges_all, false_edges = get_data(args.dataset)
 
         with open('data/bipartite/id2name/'+ str(args.dataset) +'u2id.pkl', 'rb') as f:
             u2id = pickle.load(f)
@@ -170,7 +178,7 @@ def run():
         print(str(seed)+' iteration....' + str(args.learning_rate1) + ', '+ str(args.learning_rate2))
         print('='*88)
 
-        adj_train_norm, test_roc_pretrain, test_ap_pretrain = learn_train_adj(seed)
+        adj_train_norm, test_roc_pretrain, test_ap_pretrain, test_precision_pretrain = learn_train_adj(seed)
         # adj_train_norm.tolil().setdiag(np.zeros(adj_train_norm.shape[0]))
         adj_train_norm = adj_train_norm.toarray()
 
@@ -180,21 +188,33 @@ def run():
         AT = np.transpose(A)
         A_pred = (A+AT)/2.0 
         
+        test_precision = get_precision(test_edges, test_edges_false, A_pred, adj_orig, sparse_to_tuple(sparse.csr_matrix(train_edges))[0], u2id, v2id)
         test_roc, test_ap = get_scores(test_edges, test_edges_false, A_pred, adj_orig)
         print("2nd model End of training!", "test_roc=", "{:.5f}".format(test_roc),
-              "test_ap=", "{:.5f}".format(test_ap))
+              "test_ap=", "{:.5f}".format(test_ap), 
+              'test precision=','{:.5f}'.format(test_precision))
+        # exit()
+
+        # corr = get_correlation(test_edges,test_edges_false, A_pred,
 
         test_roc_list.append(test_roc)
         test_ap_list.append(test_ap)
+        test_precision_list.append(test_precision)
 
         test_ap_pretrain_list.append(test_ap_pretrain)
         test_roc_pretrain_list.append(test_roc_pretrain)
+        test_precision_pretrain_list.append(test_precision_pretrain)
+
 
     mean_roc, ste_roc = np.mean(test_roc_list), np.std(test_roc_list)/(args.numexp**(1/2))
     mean_ap, ste_ap = np.mean(test_ap_list), np.std(test_ap_list)/(args.numexp**(1/2))
+    mean_precision, ste_precision = np.mean(test_precision_list), np.std(test_precision_list)/(args.numexp**(1/2))
+
 
     mean_roc_pretrain, ste_roc_pretrain = np.mean(test_roc_pretrain_list), np.std(test_roc_pretrain_list)/(args.numexp**(1/2))
     mean_ap_pretrain, ste_ap_pretrain = np.mean(test_ap_pretrain_list), np.std(test_ap_pretrain_list)/(args.numexp**(1/2))
+    mean_precision_pretrain, ste_precision_pretrain = np.mean(test_precision_pretrain_list), np.std(test_precision_pretrain_list)/(args.numexp**(1/2))
+
 
     print('cuda device= '+ str(args.device))     
     print('model1= '+ str(args.model1))     
@@ -207,8 +227,11 @@ def run():
     print('epoch2= '+ str(args.num_epoch2))
     print('mean_roc=','{:.5f}'.format(mean_roc),', ste_roc=','{:.5f}'.format(ste_roc))
     print('mean_ap=','{:.5f}'.format(mean_ap),', ste_ap=','{:.5f}'.format(ste_ap))
+    print('mean_precision=','{:.5f}'.format(mean_precision),', ste_ap=','{:.5f}'.format(ste_precision))
+
     print('mean_roc_pretrain=','{:.5f}'.format(mean_roc_pretrain),', ste_roc=','{:.5f}'.format(ste_roc_pretrain))
     print('mean_ap_pretrain=','{:.5f}'.format(mean_ap_pretrain),', ste_ap=','{:.5f}'.format(ste_ap_pretrain))
+    print('mean_precision_pretrain=','{:.5f}'.format(mean_precision_pretrain),', ste_ap=','{:.5f}'.format(ste_precision_pretrain))
 
 
 run()

@@ -1,7 +1,7 @@
 ### CONFIGS ###
 # dataset = 'ionchannel'
 # dataset='enzyme'
-dataset = 'gpcr'
+# dataset = 'gpcr'
 # dataset= 'malaria'
 # dataset = 'nanet'
 # dataset = 'c2o'
@@ -9,7 +9,7 @@ dataset = 'gpcr'
 # dataset = 'cora'
 # dataset ='citeseer'
 # dataset ='pubmed'
-# dataset = 'drug'
+dataset = 'drug'
 # dataset = 'movie100k'
 # dataset = 'sw'
 # dataset = 'movie1m'
@@ -22,14 +22,14 @@ model1 = 'LGAE' # GAE, LGAE
 model2 = 'LGAE' # MGAE, MLGAE, LGAE, GAE
 # model2 = 'HLGAE'
 
-input_dim1 = 318 # gpcr bipartite
+# input_dim1 = 318 # gpcr bipartite
 # input_dim1 = 1109 # enzyme bipartite
 # input_dim1 = 1103 # malaria
 # input_dim1 =1880 # nanet
 # input_dim1 = 261 # country2org
 
 # input_dim1 = 414 # ion channel bip
-# input_dim1 = 350 # drug
+input_dim1 = 350 # drug
 # input_dim1 = 2625 # movie100k
 # input_dim1 = 32 # southernwomen
 # input_dim1 = 9746 # movie1m
