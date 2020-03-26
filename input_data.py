@@ -106,8 +106,6 @@ def load_data_biological(dataset, change_seed=False):
         elif dataset == 'movie100k':
             edge = line.strip('\n').split('\t')
             if int(edge[2]) < 3.0:
-                graph[u2id[edge[0]]]
-                graph[v2id[edge[1]]]
                 continue
         elif len(line.strip('\n').split('\t')) > 1:
             edge = line.strip('\n').split('\t')
@@ -374,4 +372,3 @@ def load_data_drug(dataset, change_seed=False):
 # #     # adj, features = load_data('cora')
     
 # main()
-
