@@ -19,6 +19,10 @@ from scipy import linalg
 # from OrderedSet import OrderedSet
 from sklearn.utils.extmath import randomized_svd
 from sklearn import metrics
+from scipy.sparse.linalg import svds
+from sparsesvd import sparsesvd
+import sklearn.decomposition as skd
+
 # Train on CPU (hide GPU) due to memory constraints
 os.environ['CUDA_VISIBLE_DEVICES'] = ""
 
@@ -104,7 +108,13 @@ def getBiSPM(B_r,B_triangle):
     # print('rank r: ', rank)
 
     U, s, Vh = linalg.svd(B_r, full_matrices=False)
+    # svd = skd.TruncatedSVD(rank)
+    # svd.fit_transform(B_r)
+    # U = svd.transform(B_r).dot(np.linalg.inv(np.diag(svd.singular_values_)))
+    # s = svd.singular_values_
+    # Vh = svd.components_
     S = np.diag(s)
+
     # print('b_r.shape:',B_r.shape)
     # val = np.zeros((B_r.shape))
     # for i in range(0, rank):
