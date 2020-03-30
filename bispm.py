@@ -167,10 +167,12 @@ for i in range(10):
 
     adj_train = adj_train[:len(u2id),len(u2id):]
 
+    Bi_adjacency = np.zeros(adj.shape)
+    for i in range(1):
+        B_r, B_triangle = getBrAndBtriangle(adj_train)
+        Bi_adjacency += getBiSPM(B_r,B_triangle)
+    Bi_adjacency /= 1.0
 
-    B_r, B_triangle = getBrAndBtriangle(adj_train)
-    
-    Bi_adjacency = getBiSPM(B_r,B_triangle)
 
     test_precision = get_precision(test_edges, test_edges_false, Bi_adjacency, adj_orig, sparse_to_tuple(sparse.csr_matrix(train_edges))[0], u2id, v2id)
     test_roc, test_ap = get_scores(test_edges, test_edges_false, Bi_adjacency)

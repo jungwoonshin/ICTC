@@ -77,6 +77,32 @@ def get_scores(edges_pos, edges_neg, adj_rec):
 
     return roc_score, ap_score, auc_score
 
+def getSESP(B_r,B_triangle):
+    print('B_r.shape: ',B_r.shape)
+    print('B_triangle.shape: ',B_triangle.shape)
+
+    eigVals, eigVecs = linalg.eigh(B_r) 
+    eigVals = np.diag(eigVals)
+    # val = np.zeros((B_r.shape))
+    # for i in range(0, B_r.shape[0]):
+    #     val += np.multiply(eigVals[i,i],np.matmul(eigVecs[:,i].reshape(-1,1), eigVecs[:,i].reshape(1,-1)))
+
+    # print('  np.allclose(val, B_r): ',np.allclose(val, B_r, 1e-05,1e-08))
+
+    result = np.zeros((B_r.shape), dtype='float64')
+    for i in range(0, B_r.shape[0]):
+        left = np.matmul(eigVecs[:,i].reshape(1,-1),B_triangle)
+        right = eigVecs[:,i].reshape(-1,1)
+        numerator = np.matmul(left,right)
+        denominator = np.matmul(eigVecs[:,i].reshape(1,-1),right)
+        delta_sigma = numerator/denominator
+        delta_sigma = delta_sigma[0][0]
+
+        result += np.multiply((eigVals[i,i] + delta_sigma) ,  np.matmul(eigVecs[:,i].reshape(-1,1), eigVecs[:,i].reshape(1,-1)))
+
+    # B_hat = sigmoid(result)
+    B_hat = result
+    return result
 
 def getBrAndBtriangle02(adj_train):
     # adj_train += adj_train.T
@@ -144,52 +170,11 @@ for i in range(10):
     adj_orig = adj_orig - sp.dia_matrix((adj_orig.diagonal()[np.newaxis, :], [0]), shape=adj_orig.shape)
     adj_orig.eliminate_zeros()
 
-
-    B_r,B_triangle = getBrAndBtriangle02(adj_train)
-
-    print('B_r.shape: ',B_r.shape)
-    print('B_triangle.shape: ',B_triangle.shape)
-
-    # exit()
-
-    # rank = np.linalg.matrix_rank(B_r)
-    # print('rank r: ', rank)
-    # print('check_symmetric(B_r): ', check_symmetric(B_r))
-    # U, s, Vh = linalg.svd(B_r, full_matrices=False)
-    eigVals, eigVecs = linalg.eigh(B_r) 
-    # S = np.diag(s)
-
-    # U, s, Vh = randomized_svd(B_r,n_components=rank,
-    #                               n_iter=50,
-    #                               random_state=i)
-    # S = np.diag(d)
-
-    eigVals = np.diag(eigVals)
-
-    # A = np.matmul(B_r, eigVecs[:,0])
-    # B = np.multiply(eigVals[0,0], eigVecs[:,0])
-    # print('  np.allclose(A, B): ',np.allclose(A, B, 1e-05,1e-08))
-
-    # val = np.zeros((B_r.shape))
-    # for i in range(0, B_r.shape[0]):
-    #     val += np.multiply(eigVals[i,i],np.matmul(eigVecs[:,i].reshape(-1,1), eigVecs[:,i].reshape(1,-1)))
-
-    # print('  np.allclose(val, B_r): ',np.allclose(eigVecs.dot(eigVals).dot(eigVecs.T), B_r, 1e-05, 1e-08))
-    # print('  np.allclose(val, B_r): ',np.allclose(val, B_r, 1e-05,1e-08))
-
-    result = np.zeros((B_r.shape), dtype='float64')
-    for i in range(0, B_r.shape[0]):
-        left = np.matmul(eigVecs[:,i].reshape(1,-1),B_triangle)
-        right = eigVecs[:,i].reshape(-1,1)
-        numerator = np.matmul(left,right)
-        denominator = np.matmul(eigVecs[:,i].reshape(1,-1),right)
-        delta_sigma = numerator/denominator
-        delta_sigma = delta_sigma[0][0]
-
-        result += np.multiply((eigVals[i,i] + delta_sigma) ,  np.matmul(eigVecs[:,i].reshape(-1,1), eigVecs[:,i].reshape(1,-1)))
-
-    # B_hat = sigmoid(result)
-    B_hat = result
+    B_hat = 0
+    for i in range(1):
+        B_r,B_triangle = getBrAndBtriangle02(adj_train)
+        B_hat += getSESP(B_r, B_triangle)
+    B_hat/=1.0
 
     test_precision = get_precision(test_edges, test_edges_false, B_hat, adj_orig, sparse_to_tuple(sparse.csr_matrix(train_edges))[0], u2id, v2id)
     test_roc, test_ap, test_auc = get_scores(test_edges, test_edges_false, B_hat)
