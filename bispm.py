@@ -104,7 +104,6 @@ def getBiSPM(B_r,B_triangle):
     # print('rank r: ', rank)
 
     U, s, Vh = linalg.svd(B_r, full_matrices=False)
-    rank = s.shape[0]
     S = np.diag(s)
     # print('b_r.shape:',B_r.shape)
     # val = np.zeros((B_r.shape))
@@ -138,7 +137,7 @@ def getBiSPM(B_r,B_triangle):
     Bi_adjacency_right = np.concatenate((B_hat, np.zeros((B_hat.shape[1],B_hat.shape[1]))), axis=0)
     Bi_adjacency = np.concatenate((Bi_adjacency_left, Bi_adjacency_right), axis=1)
     return Bi_adjacency
-    
+
 test_ap_list = []
 test_roc_list = []
 test_precision_list = []
