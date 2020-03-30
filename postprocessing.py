@@ -132,6 +132,7 @@ def get_precision(edges_pos, edges_neg, adj_rec, adj_orig,train_edges, u2id,v2id
     for i in range(len(u2id)):
         for j in range(len(u2id),len(u2id)+len(v2id)):
             all_edges.append((i,j))
+    # all_edges = [(x,y) for x in range(adj_rec.shape[0]) for y in range(adj_rec.shape[0])]
 
     equal_edges =  [(x,x) for x in range(adj_rec.shape[0])]
     u_minus_ep = list(set(all_edges) - set(equal_edges))
@@ -285,3 +286,182 @@ def get_homo_scores(adj_train, u2id, v2id):
             # scores[x,y] = sigmoid(len(intersection))
 
     return scores
+
+def get_jc_scores(adj_train,u2id,v2id):
+    adj_train_np = adj_train.toarray()
+    graph =nx.from_numpy_matrix(adj_train.toarray())
+    adj_train = nx.to_dict_of_lists(graph)
+
+    # Predict on test set of edges
+    S = np.zeros(adj_train_np.shape)
+    a = adj_train_np.shape[0]
+    b1 = 0
+    b2 = adj_train_np.shape[0]
+    for x in range(a):
+        for y in range(b1,b2):
+            idx =  adj_train[x]
+            Sx = [adj_train[x] for x in idx]
+            Sx = set([item for sublist in Sx for item in sublist])
+            # print(Sx)
+            Sy = adj_train[y]
+            Sy = set(Sy)
+            score = 0.0
+            intersection1 = Sx.intersection(Sy)
+
+            idx =  adj_train[y]
+            Sx = [adj_train[y] for y in idx]
+            Sx = set([item for sublist in Sx for item in sublist])
+            # print(Sx)
+            Sy = adj_train[x]
+            Sy = set(Sy)
+            score = 0.0
+            intersection2 = Sx.intersection(Sy)
+            numerator = intersection1.union(intersection2)
+
+            Sx = set(adj_train[x])
+            Sy = set(adj_train[y])
+            denominator = Sx.union(Sy)
+
+            score = len(numerator)/len(denominator) if len(Sx.union(Sy))>0 else 0.0
+            S[x,y] = score
+            S[y,x] = score
+        b1+=1
+    return S
+
+def get_cn_scores(adj_train,u2id,v2id):
+    adj_train_np = adj_train.toarray()
+    graph =nx.from_numpy_matrix(adj_train.toarray())
+    adj_train = nx.to_dict_of_lists(graph)
+
+    # Predict on test set of edges
+    S = np.zeros(adj_train_np.shape)
+    a = adj_train_np.shape[0]
+    b1 = 0
+    b2 = adj_train_np.shape[0]
+    for x in range(a):
+        for y in range(b1,b2):
+            idx =  adj_train[x]
+            Sx = [adj_train[x] for x in idx]
+            Sx = set([item for sublist in Sx for item in sublist])
+            # print(Sx)
+            Sy = adj_train[y]
+            Sy = set(Sy)
+            score = 0.0
+            intersection1 = Sx.intersection(Sy)
+
+            idx =  adj_train[y]
+            Sx = [adj_train[y] for y in idx]
+            Sx = set([item for sublist in Sx for item in sublist])
+            # print(Sx)
+            Sy = adj_train[x]
+            Sy = set(Sy)
+            score = 0.0
+            intersection2 = Sx.intersection(Sy)
+            numerator = intersection1.union(intersection2)
+
+            Sx = set(adj_train[x])
+            Sy = set(adj_train[y])
+            denominator = Sx.union(Sy)
+
+            score = len(numerator)
+            S[x,y] = score
+            S[y,x] = score
+        b1+=1
+    return S
+def get_aa_scores(adj_train,u2id,v2id):
+    adj_train_np = adj_train.toarray()
+    graph =nx.from_numpy_matrix(adj_train.toarray())
+    adj_train = nx.to_dict_of_lists(graph)
+
+    # Predict on test set of edges
+    S = np.zeros(adj_train_np.shape)
+    a = adj_train_np.shape[0]
+    b1 = 0
+    b2 = adj_train_np.shape[0]
+    for x in range(a):
+        for y in range(b1,b2):
+            idx =  adj_train[x]
+            Sx = [adj_train[x] for x in idx]
+            Sx = set([item for sublist in Sx for item in sublist])
+
+            Sy = adj_train[y]
+            Sy = set(Sy)
+            intersection1 = Sx.intersection(Sy)
+
+            idx =  adj_train[y]
+
+            Sx = [adj_train[y] for y in idx]
+            Sx = set([item for sublist in Sx for item in sublist])
+            # print(Sx)
+            Sy = adj_train[x]
+            Sy = set(Sy)
+            intersection2 = Sx.intersection(Sy)
+            intersection = intersection1.union(intersection2)
+            score=0.0
+            for i in intersection:
+                try:
+                    if len(adj_train[i]) == 1.0:
+                        neighbor_z = 1./math.log(len(adj_train[i])+0.1)
+                    else:
+                        neighbor_z = 1./math.log(len(adj_train[i]))
+                except ZeroDivisionError:
+                    #neighbor_z = 1/math.log(0.0000001)
+                    neighbor_z = 0.
+                    # print('zerodivision')
+                score += neighbor_z
+            S[x,y] = score
+            S[y,x] = score
+        b1+=1
+    return S
+
+def get_cpa_scores(adj_train,u2id,v2id):
+    adj_train_np = adj_train.toarray()
+    graph =nx.from_numpy_matrix(adj_train.toarray())
+    adj_train = nx.to_dict_of_lists(graph)
+
+    # Predict on test set of edges
+    S = np.zeros(adj_train_np.shape)
+    a = adj_train_np.shape[0]
+    b1 = 0
+    b2 = adj_train_np.shape[0]
+    for x in range(a):
+        for y in range(b1,b2):
+            idx =  adj_train[x]
+
+            Sx = [adj_train[x] for x in idx]
+            Sx = set([item for sublist in Sx for item in sublist])
+            # print(Sx)
+            Sy = adj_train[y]
+            Sy = set(Sy)
+            score = 0.0
+            intersection1 = Sx.intersection(Sy)
+
+            idx =  adj_train[y]
+
+            Sx = [adj_train[y] for y in idx]
+            Sx = set([item for sublist in Sx for item in sublist])
+            # print(Sx)
+            Sy = adj_train[x]
+            Sy = set(Sy)
+            score = 0.0
+            intersection2 = Sx.intersection(Sy)
+            numerator = intersection1.union(intersection2)
+
+            Sx = adj_train[x]
+            Sy = adj_train[y]
+
+            # print(adj_train_numpy_matrix[244,0])
+            lcl = 0.
+            for a in Sx:
+                for b in Sy:
+                    if adj_train_np[a,b] == 1.0 or adj_train_np[b,a] == 1.0:
+                        lcl+=1.
+
+            car = len(numerator) * lcl
+            e_x = len(adj_train[x])
+            e_y = len(adj_train[y])
+            score = (e_x * e_y) + (e_x *car) + (e_y * car) + (car**2.0)
+            S[x,y] = score
+            S[y,x] = score
+        b1+=1
+    return S

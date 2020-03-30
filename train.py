@@ -25,7 +25,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 
-def learn_train_adj(seed):
+def learn_train_adj(seed, model_name):
     global adj_train, adj, features, adj_norm, adj_label, weight_mask, weight_tensor, pos_weight, norm, num_feature, features_nonzero, num_nodes
     global train_edges, train_false_edges, val_edges, val_edges_false, test_edges, test_edges_false, false_edges
     global u2id, v2id
@@ -37,7 +37,7 @@ def learn_train_adj(seed):
         adj_norm = adj_norm.cuda()
 
     torch.manual_seed(seed)
-    model_adj_norm = getattr(model,args.model1)(adj_norm, adj_unnormalized)
+    model_adj_norm = getattr(model,model_name)(adj_norm, adj_unnormalized)
     optimizer = Adam(model_adj_norm.parameters(), lr=args.learning_rate1)
 
     if torch.cuda.is_available():
@@ -74,7 +74,7 @@ def learn_train_adj(seed):
 
     test_precision = get_precision(test_edges, test_edges_false, A_pred, adj_orig, sparse_to_tuple(sparse.csr_matrix(train_edges))[0], u2id,v2id)
     test_roc, test_ap = get_scores(test_edges, test_edges_false, A_pred, adj_orig)
-    print("2nd model End of training!", "test_roc=", "{:.5f}".format(test_roc),
+    print(model_name + "End of training!", "test_roc=", "{:.5f}".format(test_roc),
               "test_ap=", "{:.5f}".format(test_ap), 
               'test precision=','{:.5f}'.format(test_precision))
 
@@ -105,14 +105,14 @@ def run():
     test_ap_list = []
     test_roc_list = []
     test_precision_list = []
-    test_auc_list = []
-
 
     test_ap_pretrain_list = []
     test_roc_pretrain_list = []
     test_precision_pretrain_list = []
-    test_auc_pretrain_list = []
 
+    test_ap_pretrain_gae_list = []
+    test_roc_pretrain_gae_list = []
+    test_precision_pretrain_gae_list = []
 
     for seed in range(args.numexp):
         adj, features,\
@@ -127,6 +127,7 @@ def run():
         adj_orig = adj_orig - sp.dia_matrix((adj_orig.diagonal()[np.newaxis, :], [0]), shape=adj_orig.shape)
         adj_orig.eliminate_zeros()
 
+        adj_train = adj_train + adj_train.T
         adj = adj_train
 
         num_nodes = adj.shape[0]
@@ -178,7 +179,8 @@ def run():
         print(str(seed)+' iteration....' + str(args.learning_rate1) + ', '+ str(args.learning_rate2))
         print('='*88)
 
-        adj_train_norm, test_roc_pretrain, test_ap_pretrain, test_precision_pretrain = learn_train_adj(seed)
+        _, test_roc_pretrain_gae, test_ap_pretrain_gae, test_precision_pretrain_gae = learn_train_adj(seed, args.model2)
+        adj_train_norm, test_roc_pretrain, test_ap_pretrain, test_precision_pretrain = learn_train_adj(seed, args.model1)
         # adj_train_norm.tolil().setdiag(np.zeros(adj_train_norm.shape[0]))
         adj_train_norm = adj_train_norm.toarray()
 
@@ -205,15 +207,22 @@ def run():
         test_roc_pretrain_list.append(test_roc_pretrain)
         test_precision_pretrain_list.append(test_precision_pretrain)
 
+        test_ap_pretrain_gae_list.append(test_ap_pretrain_gae)
+        test_roc_pretrain_gae_list.append(test_roc_pretrain_gae)
+        test_precision_pretrain_gae_list.append(test_precision_pretrain_gae)
+
 
     mean_roc, ste_roc = np.mean(test_roc_list), np.std(test_roc_list)/(args.numexp**(1/2))
     mean_ap, ste_ap = np.mean(test_ap_list), np.std(test_ap_list)/(args.numexp**(1/2))
     mean_precision, ste_precision = np.mean(test_precision_list), np.std(test_precision_list)/(args.numexp**(1/2))
 
-
     mean_roc_pretrain, ste_roc_pretrain = np.mean(test_roc_pretrain_list), np.std(test_roc_pretrain_list)/(args.numexp**(1/2))
     mean_ap_pretrain, ste_ap_pretrain = np.mean(test_ap_pretrain_list), np.std(test_ap_pretrain_list)/(args.numexp**(1/2))
     mean_precision_pretrain, ste_precision_pretrain = np.mean(test_precision_pretrain_list), np.std(test_precision_pretrain_list)/(args.numexp**(1/2))
+
+    mean_roc_pretrain_gae, ste_roc_pretrain_gae = np.mean(test_roc_pretrain_gae_list), np.std(test_roc_pretrain_gae_list)/(args.numexp**(1/2))
+    mean_ap_pretrain_gae, ste_ap_pretrain_gae = np.mean(test_ap_pretrain_gae_list), np.std(test_ap_pretrain_gae_list)/(args.numexp**(1/2))
+    mean_precision_pretrain_gae, ste_precision_pretrain_gae = np.mean(test_precision_pretrain_gae_list), np.std(test_precision_pretrain_gae_list)/(args.numexp**(1/2))
 
 
     print('cuda device= '+ str(args.device))     
@@ -225,13 +234,18 @@ def run():
     print('numexp= '+ str(args.numexp))
     print('epoch1= '+ str(args.num_epoch1))
     print('epoch2= '+ str(args.num_epoch2))
+
+
+    print('mean_roc_GAE=','{:.5f}'.format(mean_roc_pretrain_gae),', ste_roc=','{:.5f}'.format(ste_roc_pretrain_gae))
+    print('mean_ap_GAE=','{:.5f}'.format(mean_ap_pretrain_gae),', ste_ap=','{:.5f}'.format(ste_ap_pretrain_gae))
+    print('mean_precision_GAE=','{:.5f}'.format(mean_precision_pretrain_gae),', ste_ap=','{:.5f}'.format(ste_precision_pretrain_gae))
+
+    print('mean_roc_LGAE=','{:.5f}'.format(mean_roc_pretrain),', ste_roc=','{:.5f}'.format(ste_roc_pretrain))
+    print('mean_ap_LGAE=','{:.5f}'.format(mean_ap_pretrain),', ste_ap=','{:.5f}'.format(ste_ap_pretrain))
+    print('mean_precision_LGAE=','{:.5f}'.format(mean_precision_pretrain),', ste_ap=','{:.5f}'.format(ste_precision_pretrain))
+
     print('mean_roc=','{:.5f}'.format(mean_roc),', ste_roc=','{:.5f}'.format(ste_roc))
     print('mean_ap=','{:.5f}'.format(mean_ap),', ste_ap=','{:.5f}'.format(ste_ap))
     print('mean_precision=','{:.5f}'.format(mean_precision),', ste_ap=','{:.5f}'.format(ste_precision))
-
-    print('mean_roc_pretrain=','{:.5f}'.format(mean_roc_pretrain),', ste_roc=','{:.5f}'.format(ste_roc_pretrain))
-    print('mean_ap_pretrain=','{:.5f}'.format(mean_ap_pretrain),', ste_ap=','{:.5f}'.format(ste_ap_pretrain))
-    print('mean_precision_pretrain=','{:.5f}'.format(mean_precision_pretrain),', ste_ap=','{:.5f}'.format(ste_precision_pretrain))
-
 
 run()

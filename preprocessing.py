@@ -87,6 +87,7 @@ def mask_bipartite_perturbation_test_edges(adj):
     args.edge_idx_seed += 1
     val_edge_idx = all_edge_idx[:num_val]
     test_edge_idx = all_edge_idx[num_val:(num_val + num_test)]
+
     test_edges = edges[test_edge_idx]
     val_edges = edges[val_edge_idx]
     train_edges = np.delete(edges, np.hstack([test_edge_idx, val_edge_idx]), axis=0)
@@ -94,11 +95,21 @@ def mask_bipartite_perturbation_test_edges(adj):
     # Re-build adj matrix
     data = np.ones(train_edges.shape[0])
     adj_train = sp.csr_matrix((data, (train_edges[:, 0], train_edges[:, 1])), shape=adj.shape)
-    adj_train = adj_train + adj_train.T
+    # adj_train = adj_train + adj_train.T
 
     def ismember(a, b, tol=5):
         rows_close = np.all(np.round(a - b[:, None], tol) == 0, axis=-1)
         return np.any(rows_close)
+
+    def isSetValidMember(a,b):
+        setA = set()
+        setB = set()
+
+        for (x,y) in a:
+            setA.add((x,y))
+        for (x,y) in b:
+            setA.add((x,y))
+        return len(setA.intersection(setB)) > 0
 
     def isSetMember(a,b):
         setA = set()
@@ -178,14 +189,16 @@ def mask_bipartite_perturbation_test_edges(adj):
     assert ~isSetMember(test_edges_false, edges)
     print('~isSetMember(test_edges_false, edges) is True')
     assert ~isSetMember(val_edges_false, edges)
-    print('isSetMember(val_edges_false, edges) is True')
+    print('~isSetMember(val_edges_false, edges) is True')
     assert ~isSetMember(val_edges, train_edges)
-    print('isSetMember(val_edges, train_edges) is True')
+    print('~isSetMember(val_edges, train_edges) is True')
     assert ~isSetMember(test_edges, train_edges)
-    print('isSetMember(test_edges, train_edges) is True')
+    print('~isSetMember(test_edges, train_edges) is True')
     assert ~isSetMember(val_edges, test_edges)
-    print('isSetMember(val_edges, test_edges) is True')
-
+    print('~isSetMember(val_edges, test_edges) is True')
+    assert ~isSetValidMember(val_edges_false, test_edges_false)
+    print('~isSetMember(val_edges_false, test_edges_false) is True')
+    
     print('len(train_edges): ',len(train_edges))
     print('len(val_edges): ',len(val_edges))
     print('len(test_edges): ',len(test_edges))

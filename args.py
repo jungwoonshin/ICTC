@@ -1,7 +1,7 @@
 ### CONFIGS ###
 # dataset = 'ionchannel'
 # dataset='enzyme'
-# dataset = 'gpcr'
+dataset = 'gpcr'
 # dataset= 'malaria'
 # dataset = 'nanet'
 # dataset = 'c2o'
@@ -9,7 +9,7 @@
 # dataset = 'cora'
 # dataset ='citeseer'
 # dataset ='pubmed'
-dataset = 'drug'
+# dataset = 'drug'
 # dataset = 'movie100k'
 # dataset = 'sw'
 # dataset = 'movie1m'
@@ -19,7 +19,7 @@ dataset = 'drug'
 
 
 model1 = 'LGAE' # GAE, LGAE
-model2 = 'LGAE' # MGAE, MLGAE, LGAE, GAE
+model2 = 'GAE' # MGAE, MLGAE, LGAE, GAE
 # model2 = 'HLGAE'
 
 # input_dim1 = 318 # gpcr bipartite
@@ -42,7 +42,7 @@ learning_rate2 = 0.01
 # learning_rate = 0.00001 # fd pos neg, bipartite graphs
 
 num_epoch1 = 200
-num_epoch2 = 50
+num_epoch2 = 0
 
 print_val = False
 use_saved_edge_false = False
