@@ -85,44 +85,6 @@ def get_scores(edges_pos, edges_neg, adj_rec):
     return roc_score, ap_score, auc_score
 
 
-def getBrAndBtriangle02(adj_train):
-    # adj_train += adj_train.T
-    # adj_train = adj_train.toarray()
-
-    adj_train = sp.csr_matrix(adj_train)
-    # adj_train2[len(u2id):,:len(u2id)] = np.zeros((len(v2id),len(u2id)))
-    adj_tuple = sparse_to_tuple(adj_train)
-    edges = adj_tuple[0]
-    percentage = 0.9
-    num_train = int(np.floor(edges.shape[0] * percentage)) # 10%
-    all_edge_idx = list(range(edges.shape[0]))
-    np.random.shuffle(all_edge_idx)
-
-    print('num_train: ',num_train)
-    B_r_idx = all_edge_idx[:num_train] # 90% of training edges
-    # B_r_idx = all_edge_idx # 100% of training edges
-    B_triangle_idx = all_edge_idx[num_train:] # 10% of training edges
-    B_r_edges = edges[B_r_idx]
-    B_triangle_edges = edges[B_triangle_idx]
-
-    print('len(B_r_edges): ', len(B_r_edges))
-    print('len(B_triangle_edges): ', len(B_triangle_edges))
-
-    data = np.ones(B_r_edges.shape[0])
-    data2 = np.ones(B_triangle_edges.shape[0])
-
-    B_r = sp.csr_matrix((data, (B_r_edges[:, 0], B_r_edges[:, 1])), shape=adj_train.shape).toarray()
-    B_r = B_r + np.transpose(B_r)
-
-    B_r += sigmoid(np.matmul(adj_train.toarray(),np.transpose(adj_train.toarray())))
-
-    # B_r = sigmoid(B_r)
-    adj_train += adj_train.T
-    B_triangle = sp.csr_matrix((data2, (B_triangle_edges[:, 0], B_triangle_edges[:, 1])), shape=adj_train.shape).toarray()
-    B_triangle += B_triangle.T
-
-    print('B_r is symmetric: ', check_symmetric(B_r))
-    return B_r, B_triangle
 def getXY(S, adj_train):
     model = NMF(n_components=k, init='nndsvda',solver='mu',max_iter=400)
     X = model.fit_transform(adj_train.toarray())
