@@ -74,7 +74,7 @@ def learn_train_adj(seed, model_name):
 
     test_precision = get_precision(test_edges, test_edges_false, A_pred, adj_orig, sparse_to_tuple(sparse.csr_matrix(train_edges))[0], u2id,v2id)
     test_roc, test_ap = get_scores(test_edges, test_edges_false, A_pred, adj_orig)
-    print(model_name + "End of training!", "test_roc=", "{:.5f}".format(test_roc),
+    print(model_name + " End of training!", "test_roc=", "{:.5f}".format(test_roc),
               "test_ap=", "{:.5f}".format(test_ap), 
               'test precision=','{:.5f}'.format(test_precision))
 
@@ -192,7 +192,7 @@ def run():
         
         test_precision = get_precision(test_edges, test_edges_false, A_pred, adj_orig, sparse_to_tuple(sparse.csr_matrix(train_edges))[0], u2id, v2id)
         test_roc, test_ap = get_scores(test_edges, test_edges_false, A_pred, adj_orig)
-        print("2nd model End of training!", "test_roc=", "{:.5f}".format(test_roc),
+        print("N2HP model End of training!", "test_roc=", "{:.5f}".format(test_roc),
               "test_ap=", "{:.5f}".format(test_ap), 
               'test precision=','{:.5f}'.format(test_precision))
         # exit()
@@ -235,17 +235,34 @@ def run():
     print('epoch1= '+ str(args.num_epoch1))
     print('epoch2= '+ str(args.num_epoch2))
 
+    roc = '{:.1f}'.format(mean_roc_pretrain_gae*100.0)+'+'+'{:.2f}'.format(ste_roc_pretrain_gae*100.0).strip(' ')
+    ap = '{:.1f}'.format(mean_ap_pretrain_gae*100.0)+'+'+'{:.2f}'.format(ste_ap_pretrain_gae*100.0).strip(' ')
+    prec = '{:.1f}'.format(mean_precision_pretrain_gae*100.0)+'+'+'{:.2f}'.format(ste_precision_pretrain_gae*100.0).strip(' ')
 
-    print('mean_roc_GAE=','{:.5f}'.format(mean_roc_pretrain_gae),', ste_roc=','{:.5f}'.format(ste_roc_pretrain_gae))
-    print('mean_ap_GAE=','{:.5f}'.format(mean_ap_pretrain_gae),', ste_ap=','{:.5f}'.format(ste_ap_pretrain_gae))
-    print('mean_precision_GAE=','{:.5f}'.format(mean_precision_pretrain_gae),', ste_ap=','{:.5f}'.format(ste_precision_pretrain_gae))
+    print('GAE')
+    print(roc)
+    print(ap)
+    print(prec)
 
-    print('mean_roc_LGAE=','{:.5f}'.format(mean_roc_pretrain),', ste_roc=','{:.5f}'.format(ste_roc_pretrain))
-    print('mean_ap_LGAE=','{:.5f}'.format(mean_ap_pretrain),', ste_ap=','{:.5f}'.format(ste_ap_pretrain))
-    print('mean_precision_LGAE=','{:.5f}'.format(mean_precision_pretrain),', ste_ap=','{:.5f}'.format(ste_precision_pretrain))
 
-    print('mean_roc=','{:.5f}'.format(mean_roc),', ste_roc=','{:.5f}'.format(ste_roc))
-    print('mean_ap=','{:.5f}'.format(mean_ap),', ste_ap=','{:.5f}'.format(ste_ap))
-    print('mean_precision=','{:.5f}'.format(mean_precision),', ste_ap=','{:.5f}'.format(ste_precision))
+    roc = '{:.1f}'.format(mean_roc_pretrain*100.0)+'+'+'{:.2f}'.format(ste_roc_pretrain*100.0).strip(' ')
+    ap = '{:.1f}'.format(mean_ap_pretrain*100.0)+'+'+'{:.2f}'.format(ste_ap_pretrain*100.0).strip(' ')
+    prec = '{:.1f}'.format(mean_precision_pretrain*100.0)+'+'+'{:.2f}'.format(ste_precision_pretrain*100.0).strip(' ')
+    
+    print('LGAE')
+    print(roc)
+    print(ap)
+    print(prec)
+
+
+    roc = '{:.1f}'.format(mean_roc*100.0)+'+'+'{:.2f}'.format(ste_roc*100.0).strip(' ')
+    ap = '{:.1f}'.format(mean_ap*100.0)+'+'+'{:.2f}'.format(ste_ap*100.0).strip(' ')
+    prec = '{:.1f}'.format(mean_precision*100.0)+'+'+'{:.2f}'.format(ste_precision*100.0).strip(' ')
+
+    print('N2HP')
+    print(roc)
+    print(ap)
+    print(prec)
+
 
 run()

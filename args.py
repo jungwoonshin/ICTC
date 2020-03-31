@@ -1,4 +1,9 @@
 ### CONFIGS ###
+
+similarity = 'srnmf_cn'
+# similarity = 'srnmf_jc'
+# similarity = 'srnmf_cpa'
+
 # dataset = 'ionchannel'
 # dataset='enzyme'
 dataset = 'gpcr'
@@ -22,14 +27,14 @@ model1 = 'LGAE' # GAE, LGAE
 model2 = 'GAE' # MGAE, MLGAE, LGAE, GAE
 # model2 = 'HLGAE'
 
-# input_dim1 = 318 # gpcr bipartite
+input_dim1 = 318 # gpcr bipartite
 # input_dim1 = 1109 # enzyme bipartite
 # input_dim1 = 1103 # malaria
 # input_dim1 =1880 # nanet
 # input_dim1 = 261 # country2org
 
 # input_dim1 = 414 # ion channel bip
-input_dim1 = 350 # drug
+# input_dim1 = 350 # drug
 # input_dim1 = 2625 # movie100k
 # input_dim1 = 32 # southernwomen
 # input_dim1 = 9746 # movie1m
@@ -52,6 +57,7 @@ hidden1_dim = 32
 hidden2_dim = 16
 
 numexp = 10
+num_test = 10./1. # 10/1 means 10% means 10% is used as test sets., 10/2 means 20% is used as test sets. 
 
 weight_seed = 100
 edge_idx_seed = 100

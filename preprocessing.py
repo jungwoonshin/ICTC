@@ -79,7 +79,7 @@ def mask_bipartite_perturbation_test_edges(adj):
     edges_all = sparse_to_tuple(adj)[0]
 
     ''' original training/test'''
-    num_test = int(np.floor(edges.shape[0] / 10.))
+    num_test = int(np.floor(edges.shape[0] / args.num_test))
     num_val = int(np.floor(edges.shape[0] / 20.))
     all_edge_idx = list(range(edges.shape[0]))
     np.random.seed(args.edge_idx_seed)

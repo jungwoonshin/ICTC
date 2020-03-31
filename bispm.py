@@ -189,6 +189,11 @@ mean_ap, ste_ap = np.mean(test_ap_list), np.std(test_ap_list)/(args.numexp**(1/2
 mean_precision, ste_precision = np.mean(test_precision_list), np.std(test_precision_list)/(args.numexp**(1/2))
 
 print('BiSPM')
-print('mean_roc=','{:.5f}'.format(mean_roc),', ste_roc=','{:.5f}'.format(ste_roc))
-print('mean_ap=','{:.5f}'.format(mean_ap),', ste_ap=','{:.5f}'.format(ste_ap))
-print('mean_precision=','{:.5f}'.format(mean_precision),', ste_precision=','{:.5f}'.format(ste_precision))
+
+roc = '{:.1f}'.format(mean_roc*100.0)+'+'+'{:.2f}'.format(ste_roc*100.0).strip(' ')
+ap = '{:.1f}'.format(mean_ap*100.0)+'+'+'{:.2f}'.format(ste_ap*100.0).strip(' ')
+prec = '{:.1f}'.format(mean_precision*100.0)+'+'+'{:.2f}'.format(ste_precision*100.0).strip(' ')
+
+print(roc)
+print(ap)
+print(prec)

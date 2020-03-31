@@ -85,7 +85,7 @@ def get_scores(edges_pos, edges_neg, adj_rec):
     return roc_score, ap_score, auc_score
 
 
-def getXY(S, adj_train):
+def getXY(S, adj_train, k):
     model = NMF(n_components=k, init='nndsvda',solver='mu',max_iter=400)
     X = model.fit_transform(adj_train.toarray())
     Y = model.components_
@@ -100,17 +100,27 @@ def getXY(S, adj_train):
     for i in range(200):
         new_X_num = adj_train@Y.T+ gamma*(S*adj_train) @ Y.T
         new_X_den = X@Y@Y.T + gamma * (S * (X@Y)) @ Y.T + lamda * X 
-        # new_X_den[np.where(new_X_den == 0.)] = 0.0001
-        new_X_den = np.where(new_X_den != 0, new_X_den, 0.0001 )
+        # new_X_den = np.where(new_X_den != 0, new_X_den, 0.0001 )
+        new_X_den = np.where(new_X_den==0, 0.0001, new_X_den) 
         new_X = new_X_num / new_X_den 
 
         new_Y_num = X.T@adj_train + gamma * X.T @(S*adj_train)
         new_Y_den = X.T@X@Y+gamma*X.T@(S*(X@Y))+lamda*Y
-        new_Y_den = np.where(new_Y_den != 0, new_Y_den, 0.0001 )
+        # new_Y_den = np.where(new_Y_den != 0, new_Y_den, 0.0001 )
+        new_Y_den = np.where(new_Y_den==0, 0.0001, new_Y_den) 
         new_Y = new_Y_num / new_Y_den 
+
+        X_old = X
+        Y_old = Y
 
         X = np.multiply(X,new_X)
         Y = np.multiply(Y,new_Y)
+
+    #     diff1 = np.linalg.norm(X_old-X, 'fro')
+    #     diff2 = np.linalg.norm(Y_old-Y, 'fro')
+    #     print(diff1)
+    #     print(diff2)
+    # exit()
     return X,Y
 
 test_ap_list = []
@@ -136,13 +146,17 @@ for i in range(10):
     k = cumulative_contribution_rate.index(val)+1
     print(k)
 
-    # S = get_aa_scores(adj_train,u2id,v2id)
-    S = get_jc_scores(adj_train,u2id,v2id)
-    # S = get_cpa_scores(adj_train,u2id,v2id)
-    # S = get_cn_scores(adj_train,u2id,v2id)
+    if args.similarity == 'srnmf_aa':
+        S = get_aa_scores(adj_train,u2id,v2id)
+    if args.similarity == 'srnmf_cpa':
+        S = get_cpa_scores(adj_train,u2id,v2id)
+    if args.similarity == 'srnmf_jc':
+        S = get_jc_scores(adj_train,u2id,v2id)
+    if args.similarity == 'srnmf_cn':
+        S = get_cn_scores(adj_train,u2id,v2id)
     print('finished computing S')
 
-    X, Y = getXY(S, adj_train)
+    X, Y = getXY(S, adj_train, k)
     print('finished computing updating XY')
 
     B_hat = np.nan_to_num(X@Y)
@@ -163,6 +177,15 @@ mean_roc, ste_roc = np.mean(test_roc_list), np.std(test_roc_list)/(args.numexp**
 mean_ap, ste_ap = np.mean(test_ap_list), np.std(test_ap_list)/(args.numexp**(1/2))
 mean_precision, ste_precision = np.mean(test_precision_list), np.std(test_precision_list)/(args.numexp**(1/2))
 
+print(args.similarity)
 print('mean_roc=','{:.5f}'.format(mean_roc),', ste_roc=','{:.5f}'.format(ste_roc))
 print('mean_ap=','{:.5f}'.format(mean_ap),', ste_ap=','{:.5f}'.format(ste_ap))
 print('mean_precision=','{:.5f}'.format(mean_precision),', ste_precision=','{:.5f}'.format(ste_precision))
+
+roc = '{:.1f}'.format(mean_roc*100.0)+'+'+'{:.2f}'.format(ste_roc*100.0).strip(' ')
+ap = '{:.1f}'.format(mean_ap*100.0)+'+'+'{:.2f}'.format(ste_ap*100.0).strip(' ')
+prec = '{:.1f}'.format(mean_precision*100.0)+'+'+'{:.2f}'.format(ste_precision*100.0).strip(' ')
+
+print(roc)
+print(ap)
+print(prec)
