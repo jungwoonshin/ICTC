@@ -76,12 +76,16 @@ def get_scores(edges_pos, edges_neg, adj_rec, adj_orig):
     pos = []
     for e in edges_pos:
         preds.append(sigmoid(adj_rec[e[0], e[1]].item()))
+        # preds.append(adj_rec[e[0], e[1]].item())
+
         pos.append(adj_orig[e[0], e[1]])
 
     preds_neg = []
     neg = []
     for e in edges_neg:
         preds_neg.append(sigmoid(adj_rec[e[0], e[1]].item()))
+        # preds_neg.append(adj_rec[e[0], e[1]].item())
+
         neg.append(adj_orig[e[0], e[1]])
 
     preds_all = np.hstack([preds, preds_neg])
@@ -97,19 +101,12 @@ def get_correlation(edges_pos, edges_neg, adj_rec, adj_orig):
     preds = []
     pos = []
     for e in edges_pos:
-        # print(e)
-        # print(adj_rec[e[0], e[1]])
-        # score = sigmoid(adj_rec[e[0], e[1]].item())
-        # print(score)
-        # preds.append(sigmoid(adj_rec[e[0], e[1]].item()))
         preds.append(sigmoid(adj_rec[e[0], e[1]].item()))
-        
         pos.append(adj_orig[e[0], e[1]])
 
     preds_neg = []
     neg = []
     for e in edges_neg:
-
         preds_neg.append(sigmoid(adj_rec[e[0], e[1]].item()))
         neg.append(adj_orig[e[0], e[1]])
 
@@ -161,12 +158,6 @@ def get_acc(adj_rec, adj_label):
     accuracy = (preds_all == labels_all).sum().float() / labels_all.size(0)
     return accuracy
 
-def get_acc2(adj_rec, adj_label):
-    labels_all = adj_label.view(-1).long()
-    preds_all = (adj_rec > 0.5).view(-1).long()
-    accuracy = (preds_all == labels_all).sum().float() / labels_all.size(0)
-    return accuracy
-
 def max1(t1, t2):
     combined = torch.cat((t1.unsqueeze(2), t2.unsqueeze(2)), dim=2)
     return torch.max(combined, dim=2)[0].squeeze(2)
@@ -177,115 +168,6 @@ def largest_indices(ary, n):
     indices = np.argpartition(flat, -n)[-n:]
     indices = indices[np.argsort(-flat[indices])]
     return np.unravel_index(indices, ary.shape)
-
-def get_similarity_and_number_of_neighbors(adj_train,  adj_train_norm, u2id):
-    A = adj_train_norm[:len(u2id),:len(u2id)]
-    B = adj_train_norm[len(u2id):,len(u2id):]
-
-    indice1 = largest_indices(A,A.shape[0])
-    indice2 = largest_indices(B,B.shape[0])
-    indice2 = (indice2[0]+len(u2id), indice2[1]+len(u2id))
-
-    top5_indice1_x = indice1[0][:int(len(indice1[0])/2.)]
-    top5_indice1_y = indice1[1][:int(len(indice1[0])/2.)]
-
-    number_of_common_neighbor = []
-    for (x,y) in zip(top5_indice1_x, top5_indice1_y):
-        # print(x)
-        idx_x = neighbor_x = set(adj_train[x].indices)
-        idx_y = neighbor_y = set(adj_train[y].indices)
-        intersection= neighbor_x.intersection(neighbor_y)
-        # print(len(intersection))
-
-        two_hop_neighbor_x = [adj_train[x].indices.tolist() for x in idx_x]
-        two_hop_neighbor_x = set([item for sublist in two_hop_neighbor_x for item in sublist])
-
-        two_hop_neighbor_y = [adj_train[x].indices.tolist() for x in idx_y]
-        two_hop_neighbor_y = set([item for sublist in two_hop_neighbor_y for item in sublist])
-        intersection2 = two_hop_neighbor_x.intersection(two_hop_neighbor_y)
-
-        number_of_common_neighbor.append(len(intersection)+len(intersection2))
-        # print(neighbor_y)
-        # print(adj_train)
-        
-        # exit()
-    mean_ncn = np.mean(number_of_common_neighbor)
-    print(mean_ncn)
-
-    top5_indice1_x = indice1[0][int(len(indice1[0])/2.):]
-    top5_indice1_y = indice1[1][int(len(indice1[0])/2.):]
-
-    number_of_common_neighbor = []
-    for (x,y) in zip(top5_indice1_x, top5_indice1_y):
-        # print(x)
-        idx_x = neighbor_x = set(adj_train[x].indices)
-        idx_y = neighbor_y = set(adj_train[y].indices)
-        intersection= neighbor_x.intersection(neighbor_y)
-        # print(len(intersection))
-
-        two_hop_neighbor_x = [adj_train[x].indices.tolist() for x in idx_x]
-        two_hop_neighbor_x = set([item for sublist in two_hop_neighbor_x for item in sublist])
-
-        two_hop_neighbor_y = [adj_train[x].indices.tolist() for x in idx_y]
-        two_hop_neighbor_y = set([item for sublist in two_hop_neighbor_y for item in sublist])
-        intersection2 = two_hop_neighbor_x.intersection(two_hop_neighbor_y)
-
-        number_of_common_neighbor.append(len(intersection)+len(intersection2))
-        # print(neighbor_y)
-        # print(adj_train)
-        
-        # exit()
-    mean_ncn = np.mean(number_of_common_neighbor)
-    print(mean_ncn)
-
-# get homogeneous scores for same set nodes only.
-def get_homo_scores(adj_train, u2id, v2id):
-    graph =nx.from_numpy_matrix(adj_train.toarray())
-    size = adj_train.shape[0]
-    adj_train = nx.to_dict_of_lists(graph)
-
-    scores = np.zeros((size,size))
-    for x in range(len(u2id)):
-        for y in range(len(u2id)):
-            Sx = set(adj_train[x])
-            Sy = set(adj_train[y])
-            intersection = Sx.intersection(Sy)
-            score =0.0
-            for i in intersection:
-                try:
-                    if len(adj_train[i]) == 1.0:
-                        neighbor_z = 1./math.log(len(adj_train[i])+0.1)
-                    else:
-                        neighbor_z = 1./math.log(len(adj_train[i]))
-                except ZeroDivisionError:
-                    #neighbor_z = 1/math.log(0.0000001)
-                    neighbor_z = 0.
-                    # print('zerodivision')
-                score += neighbor_z
-            scores[x,y] = score
-            # scores[x,y] = sigmoid(len(intersection))
-
-    for x in range(len(u2id),len(u2id)+len(v2id)):
-        for y in range(len(u2id),len(u2id)+len(v2id)):
-            Sx = set(adj_train[x])
-            Sy = set(adj_train[y])
-            intersection = Sx.intersection(Sy)
-            score =0.0
-            for i in intersection:
-                try:
-                    if len(adj_train[i]) == 1.0:
-                        neighbor_z = 1./math.log(len(adj_train[i])+0.1)
-                    else:
-                        neighbor_z = 1./math.log(len(adj_train[i]))
-                except ZeroDivisionError:
-                    #neighbor_z = 1/math.log(0.0000001)
-                    neighbor_z = 0.
-                    # print('zerodivision')
-                score += neighbor_z
-            scores[x,y] = score
-            # scores[x,y] = sigmoid(len(intersection))
-
-    return scores
 
 def get_jc_scores(adj_train,u2id,v2id):
     adj_train_np = adj_train.toarray()
@@ -368,6 +250,7 @@ def get_cn_scores(adj_train,u2id,v2id):
             S[y,x] = score
         b1+=1
     return S
+    
 def get_aa_scores(adj_train,u2id,v2id):
     adj_train_np = adj_train.toarray()
     graph =nx.from_numpy_matrix(adj_train.toarray())

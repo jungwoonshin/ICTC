@@ -26,59 +26,8 @@ import sklearn.decomposition as skd
 # Train on CPU (hide GPU) due to memory constraints
 os.environ['CUDA_VISIBLE_DEVICES'] = ""
 
-
-
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))     
-
-def get_scores(edges_pos, edges_neg, adj_rec):
-
-    def sigmoid(x):
-        return 1 / (1 + np.exp(-x))
-
-    # Predict on test set of edges
-    preds = []
-    pos = []
-    for e in edges_pos:
-        # print(e)
-        # print(adj_rec[e[0], e[1]].item())
-        # exit()
-        if e[0] < len(u2id) and e[1] < len(u2id):
-            print('warning11')
-        if e[0] > len(u2id) and e[1] > len(u2id):
-            print('warning12')
-        if e[0] > len(u2id) and e[1] < len(u2id):
-            print('warning1*')  
-
-        # score = sigmoid(adj_rec[e[0], e[1]].item())
-        # print(score)
-        score = adj_rec[e[0], e[1]].item()
-        preds.append(score)
-        pos.append(adj_orig[e[0], e[1]])
-
-    preds_neg = []
-    neg = []
-    for e in edges_neg:
-        if e[0] < len(u2id) and e[1] <len(u2id):
-            print('warning21')
-        if e[0] > len(u2id) and e[1] > len(u2id):
-            print('warning22')
-        if e[0] > len(u2id) and e[1] < len(u2id):
-            print('warning23')   
-
-        # preds_neg.append(sigmoid(adj_rec[e[0], e[1]].item()))
-        # score = sigmoid(adj_rec[e[0], e[1]].item())
-        score = adj_rec[e[0], e[1]].item()
-        preds_neg.append(score)
-        neg.append(adj_orig[e[0], e[1]])
-
-    preds_all = np.hstack([preds, preds_neg])
-    labels_all = np.hstack([np.ones(len(preds)), np.zeros(len(preds_neg))])
-    roc_score = roc_auc_score(labels_all, preds_all)
-    ap_score = average_precision_score(labels_all, preds_all)
-    fpr, tpr, thresholds = metrics.roc_curve(labels_all, preds_all)
-    auc_score = metrics.auc(fpr, tpr)
-    return roc_score, ap_score
 
 def getBrAndBtriangle(adj_train):
     adj_tuple = sparse_to_tuple(adj_train)
@@ -87,6 +36,7 @@ def getBrAndBtriangle(adj_train):
     num_train = int(np.floor(edges.shape[0] * percentage)) # 10%
 
     all_edge_idx = list(range(edges.shape[0]))
+    np.random.seed(args.edge_idx_seed)
     np.random.shuffle(all_edge_idx)
     B_r_idx = all_edge_idx[:num_train] # 90% of training edges
     B_triangle_idx = all_edge_idx[num_train:] # 10% of training edges
@@ -103,28 +53,20 @@ def getBrAndBtriangle(adj_train):
 def getBiSPM(B_r,B_triangle):
     B_r = B_r.toarray()
     B_triangle = B_triangle.toarray()
+    np.random.seed(0)
     rank = np.linalg.matrix_rank(B_r)
 
-    # print('rank r: ', rank)
-
+    np.random.seed(0)
     U, s, Vh = linalg.svd(B_r, full_matrices=False)
-    # svd = skd.TruncatedSVD(rank)
-    # svd.fit_transform(B_r)
-    # U = svd.transform(B_r).dot(np.linalg.inv(np.diag(svd.singular_values_)))
-    # s = svd.singular_values_
-    # Vh = svd.components_
     S = np.diag(s)
 
     # print('b_r.shape:',B_r.shape)
     # val = np.zeros((B_r.shape))
     # for i in range(0, rank):
     #     val += np.multiply(S[i,i] , np.outer(U[:, i].reshape(-1,1), Vh[i,:].reshape(1,-1)))
-
-    # print('print(np.allclose(adj_train, np.dot(U, np.dot(S, Vh)))): ',np.allclose(adj_train, np.dot(U, np.dot(S, Vh))))
-    # print('adj_train.shape[0]*adj_train.shape[1]: ', adj_train.shape[0]*adj_train.shape[1])
-    # print('  (val!=Br).sum(): ',(val!=B_r).sum())
     
-    middle_val = np.matmul(np.transpose(B_r), B_triangle)+ np.matmul(np.transpose(B_triangle),B_r) # 877 * 877
+    middle_val = (B_r.T @ B_triangle) + (B_triangle.T @ B_r) # 877 * 877
+
     result = np.zeros((B_r.shape), dtype='float64')
     for i in range(0, rank):
         left = np.matmul(Vh[i,:].reshape(1,-1),middle_val)
@@ -173,9 +115,8 @@ for i in range(10):
         Bi_adjacency += getBiSPM(B_r,B_triangle)
     Bi_adjacency /= 1.0
 
-
     test_precision = get_precision(test_edges, test_edges_false, Bi_adjacency, adj_orig, sparse_to_tuple(sparse.csr_matrix(train_edges))[0], u2id, v2id)
-    test_roc, test_ap = get_scores(test_edges, test_edges_false, Bi_adjacency)
+    test_roc, test_ap = get_scores(test_edges, test_edges_false, Bi_adjacency, adj_orig)
     print("End of training!", "test_roc=", "{:.5f}".format(test_roc),
               "test_ap=", "{:.5f}".format(test_ap), 
               'test precision=','{:.5f}'.format(test_precision))

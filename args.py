@@ -4,42 +4,27 @@ similarity = 'srnmf_cn'
 # similarity = 'srnmf_jc'
 # similarity = 'srnmf_cpa'
 
-# dataset = 'ionchannel'
+# dataset = 'gpcr'
 # dataset='enzyme'
-dataset = 'gpcr'
+# dataset = 'ionchannel'
 # dataset= 'malaria'
-# dataset = 'nanet'
-# dataset = 'c2o'
-
-# dataset = 'cora'
-# dataset ='citeseer'
-# dataset ='pubmed'
-# dataset = 'drug'
-# dataset = 'movie100k'
+dataset = 'drug'
 # dataset = 'sw'
-# dataset = 'movie1m'
+# dataset = 'nanet'
+# dataset = 'movie100k'
 
-# dataset = 'fdpos'
-# dataset = 'fdneg'
+model1 = 'LGAE'
+model2 = 'GAE' 
 
-
-model1 = 'LGAE' # GAE, LGAE
-model2 = 'GAE' # MGAE, MLGAE, LGAE, GAE
-# model2 = 'HLGAE'
-
-input_dim1 = 318 # gpcr bipartite
+# input_dim1 = 318 # gpcr bipartite
 # input_dim1 = 1109 # enzyme bipartite
-# input_dim1 = 1103 # malaria
-# input_dim1 =1880 # nanet
-# input_dim1 = 261 # country2org
-
 # input_dim1 = 414 # ion channel bip
-# input_dim1 = 350 # drug
-# input_dim1 = 2625 # movie100k
+# input_dim1 = 1103 # malaria
+input_dim1 = 350 # drug
 # input_dim1 = 32 # southernwomen
-# input_dim1 = 9746 # movie1m
-# input_dim = 243 # food disease negative
-# input_dim = 175 # food disease positive
+# input_dim1 =1880 # nanet
+# input_dim1 = 2625 # movie100k
+
 device = 1
 
 learning_rate1 = 0.01
@@ -61,11 +46,3 @@ num_test = 10./1. # 10/1 means 10% means 10% is used as test sets., 10/2 means 2
 
 weight_seed = 100
 edge_idx_seed = 100
-
-
-# input_dim1 = 1123 # citeseer bipartite
-# input_dim1 = 1611 #/ cora bipartite
-# input_dim1 = 16859 # pubmed bipartite
-
-# input_dim = 3327 # citeseer featureless
-# input_dim =2708 # cora featureless 
