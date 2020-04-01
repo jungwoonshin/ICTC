@@ -31,60 +31,6 @@ os.environ['CUDA_VISIBLE_DEVICES'] = ""
 def check_symmetric(a, rtol=1e-05, atol=1e-08):
     return np.allclose(a, a.T, rtol=rtol, atol=atol)
 
-def sigmoid(x):
-    return 1 / (1 + np.exp(-x))     
-
-def get_scores(edges_pos, edges_neg, adj_rec):
-
-    def sigmoid(x):
-        return 1 / (1 + np.exp(-x))
-
-    # Predict on test set of edges
-    preds = []
-    pos = []
-    for e in edges_pos:
-        # print(e)
-        # print(adj_rec[e[0], e[1]].item())
-        # exit()
-        if e[0] < len(u2id) and e[1] < len(u2id):
-            print('warning1')
-        if e[0] > len(u2id) and e[1] > len(u2id):
-            print('warning1')
-
-        score = sigmoid(adj_rec[e[0], e[1]].item())
-        # print(score)
-        # score = adj_rec[e[0], e[1]].item()
-        preds.append(score)
-        pos.append(adj_orig[e[0], e[1]])
-
-    preds_neg = []
-    neg = []
-    for e in edges_neg:
-        if e[0] < len(u2id) and e[1] <len(u2id):
-            print('warning2')
-        if e[0] > len(u2id) and e[1] > len(u2id):
-            print('warning2')
-        # preds_neg.append(sigmoid(adj_rec[e[0], e[1]].item()))
-        score = sigmoid(adj_rec[e[0], e[1]].item())
-        # score = adj_rec[e[0], e[1]].item()
-        preds_neg.append(score)
-        neg.append(adj_orig[e[0], e[1]])
-
-    preds_all = np.hstack([preds, preds_neg])
-    labels_all = np.hstack([np.ones(len(preds)), np.zeros(len(preds_neg))])
-    roc_score = roc_auc_score(labels_all, preds_all)
-    ap_score = average_precision_score(labels_all, preds_all)
-    fpr, tpr, thresholds = metrics.roc_curve(labels_all, preds_all)
-    auc_score = metrics.auc(fpr, tpr)
-    # if epoch > 100:
-    #     print("ANSWERS")
-    #     print(labels_all)
-    #     print("PREDICTIONS")
-    #     print(preds_all)
-
-    return roc_score, ap_score, auc_score
-
-
 def getXY(S, adj_train, k):
     model = NMF(n_components=k, init='nndsvda',solver='mu',max_iter=400)
     X = model.fit_transform(adj_train.toarray())
@@ -162,7 +108,7 @@ for i in range(10):
     B_hat = np.nan_to_num(X@Y)
 
     test_precision = get_precision(test_edges, test_edges_false, B_hat, adj_orig, sparse_to_tuple(sparse.csr_matrix(train_edges))[0], u2id, v2id)
-    test_roc, test_ap, test_auc = get_scores(test_edges, test_edges_false, B_hat)
+    test_roc, test_ap = get_scores(test_edges, test_edges_false, B_hat, adj_orig)
     print("End of training!", "test_roc=", "{:.5f}".format(test_roc),
               "test_ap=", "{:.5f}".format(test_ap), 
               'test precision=','{:.5f}'.format(test_precision))
