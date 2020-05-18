@@ -156,7 +156,6 @@ def getBrAndBtriangle02(adj_train):
 
 test_ap_list = []
 test_roc_list = []
-test_precision_list = []
 for i in range(10):
     adj, features,\
             adj_train, train_edges, val_edges, val_edges_false, test_edges, test_edges_false, edges_all, edges_false_all = get_data(args.dataset)
@@ -176,26 +175,20 @@ for i in range(10):
         B_hat += getSESP(B_r, B_triangle)
     B_hat/=1.0
 
-    test_precision = get_precision(test_edges, test_edges_false, B_hat, adj_orig, sparse_to_tuple(sparse.csr_matrix(train_edges))[0], u2id, v2id)
     test_roc, test_ap, test_auc = get_scores(test_edges, test_edges_false, B_hat)
     print("End of training!", "test_roc=", "{:.5f}".format(test_roc),
-              "test_ap=", "{:.5f}".format(test_ap), 
-              'test precision=','{:.5f}'.format(test_precision))
+              "test_ap=", "{:.5f}".format(test_ap))
     test_roc_list.append(test_roc)
     test_ap_list.append(test_ap)
-    test_precision_list.append(test_precision)
     # break
 
 mean_roc, ste_roc = np.mean(test_roc_list), np.std(test_roc_list)/(args.numexp**(1/2))
 mean_ap, ste_ap = np.mean(test_ap_list), np.std(test_ap_list)/(args.numexp**(1/2))
-mean_precision, ste_precision = np.mean(test_precision_list), np.std(test_precision_list)/(args.numexp**(1/2))
 
 print('SESP-WP')
 
 roc = '{:.1f}'.format(mean_roc*100.0)+'+'+'{:.2f}'.format(ste_roc*100.0).strip(' ')
 ap = '{:.1f}'.format(mean_ap*100.0)+'+'+'{:.2f}'.format(ste_ap*100.0).strip(' ')
-prec = '{:.1f}'.format(mean_precision*100.0)+'+'+'{:.2f}'.format(ste_precision*100.0).strip(' ')
 
 print(roc)
 print(ap)
-print(prec)

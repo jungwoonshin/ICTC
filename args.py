@@ -1,9 +1,5 @@
 ### CONFIGS ###
 
-similarity = 'srnmf_cn'
-# similarity = 'srnmf_jc'
-# similarity = 'srnmf_cpa'
-
 # dataset = 'gpcr'
 # dataset='enzyme'
 # dataset = 'ionchannel'
@@ -20,19 +16,15 @@ model2 = 'GAE'
 # input_dim1 = 1109 # enzyme bipartite
 # input_dim1 = 414 # ion channel bip
 # input_dim1 = 1103 # malaria
-input_dim1 = 350 # drug
+# input_dim1 = 350 # drug
 # input_dim1 = 32 # southernwomen
 # input_dim1 =1880 # nanet
 # input_dim1 = 2625 # movie100k
 
 device = 1
 
-learning_rate1 = 0.01
-learning_rate2 = 0.01
-# learning_rate = 0.00001 # fd pos neg, bipartite graphs
-
-num_epoch1 = 200
-num_epoch2 = 0
+learning_rate = 0.01
+num_epoch = 200
 
 print_val = False
 use_saved_edge_false = False

@@ -38,7 +38,7 @@ def learn_train_adj(seed, model_name):
 
     torch.manual_seed(seed)
     model_adj_norm = getattr(model,model_name)(adj_norm, adj_unnormalized)
-    optimizer = Adam(model_adj_norm.parameters(), lr=args.learning_rate1)
+    optimizer = Adam(model_adj_norm.parameters(), lr=args.learning_rate)
 
     if torch.cuda.is_available():
         features = features.cuda()
@@ -96,11 +96,9 @@ def run():
     print('model1= '+ str(args.model1))     
     print('model2= '+ str(args.model2))
     print('dataset=' + str(args.dataset))
-    print('learning rate1= '+ str(args.learning_rate1))
-    print('learning rate2= '+ str(args.learning_rate2))
+    print('learning rate= '+ str(args.learning_rate))
     print('numexp= '+ str(args.numexp))
-    print('epoch1= '+ str(args.num_epoch1))
-    print('epoch2= '+ str(args.num_epoch2))
+    print('epoch= '+ str(args.num_epoch))
     # train model
     test_ap_list = []
     test_roc_list = []
@@ -176,7 +174,7 @@ def run():
 
 
         print('='*88)
-        print(str(seed)+' iteration....' + str(args.learning_rate1) + ', '+ str(args.learning_rate2))
+        print(str(seed)+' iteration....' + str(args.learning_rate))
         print('='*88)
 
         _, test_roc_pretrain_gae, test_ap_pretrain_gae, test_precision_pretrain_gae = learn_train_adj(seed, args.model2)
@@ -229,11 +227,9 @@ def run():
     print('model1= '+ str(args.model1))     
     print('model2= '+ str(args.model2))
     print('dataset=' + str(args.dataset))
-    print('learning rate1= '+ str(args.learning_rate1))
-    print('learning rate2= '+ str(args.learning_rate2))
+    print('learning rate= '+ str(args.learning_rate))
     print('numexp= '+ str(args.numexp))
-    print('epoch1= '+ str(args.num_epoch1))
-    print('epoch2= '+ str(args.num_epoch2))
+    print('epoch= '+ str(args.num_epoch))
 
     roc = '{:.1f}'.format(mean_roc_pretrain_gae*100.0)+'+'+'{:.2f}'.format(ste_roc_pretrain_gae*100.0).strip(' ')
     ap = '{:.1f}'.format(mean_ap_pretrain_gae*100.0)+'+'+'{:.2f}'.format(ste_ap_pretrain_gae*100.0).strip(' ')
